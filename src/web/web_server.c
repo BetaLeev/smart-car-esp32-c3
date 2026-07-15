@@ -30,12 +30,36 @@ static car_status_t s_car_status = {
  */
 static esp_err_t root_handler(httpd_req_t *req)
 {
-    extern const unsigned char webpage_start[] asm("_binary_webpage_html_start");
-    extern const unsigned char webpage_end[] asm("_binary_webpage_html_end");
-    const size_t webpage_size = (webpage_end - webpage_start);
+    const char *html = "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+        "<title>ESP32-C3 Car</title>"
+        "<style>body{font-family:Arial;padding:20px;background:#f0f0f0}"
+        "h1{color:#333}.btn{padding:15px 30px;margin:5px;font-size:18px;"
+        "border:none;border-radius:5px;cursor:pointer}"
+        ".fwd{background:#4CAF50;color:white}.bwd{background:#f44336;color:white}"
+        ".left{background:#2196F3;color:white}.right{background:#FF9800;color:white}"
+        ".stop{background:#333;color:white}</style></head>"
+        "<body><h1>ESP32-C3 Car Controller</h1>"
+        "<button class='btn fwd' onclick=\"fetch('/api/control',{method:'POST',"
+        "headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({command:'forward'})})\">前进</button><br>"
+        "<button class='btn left' onclick=\"fetch('/api/control',{method:'POST',"
+        "headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({command:'left'})})\">左转</button>"
+        "<button class='btn stop' onclick=\"fetch('/api/control',{method:'POST',"
+        "headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({command:'stop'})})\">停止</button>"
+        "<button class='btn right' onclick=\"fetch('/api/control',{method:'POST',"
+        "headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({command:'right'})})\">右转</button><br>"
+        "<button class='btn bwd' onclick=\"fetch('/api/control',{method:'POST',"
+        "headers:{'Content-Type':'application/json'},"
+        "body:JSON.stringify({command:'backward'})})\">后退</button>"
+        "<p id='status'></p><script>setInterval(()=>{fetch('/api/status')"
+        ".then(r=>r.json()).then(d=>{document.getElementById('status').innerText="
+        "'IP: '+d.ip+' | Status: '+d.command})},1000)</script></body></html>";
 
     httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, (const char *)webpage_start, webpage_size);
+    httpd_resp_send(req, html, strlen(html));
     return ESP_OK;
 }
 

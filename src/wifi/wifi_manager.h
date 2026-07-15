@@ -31,8 +31,9 @@ typedef struct {
 
 /**
  * @brief 初始化 Wi-Fi 管理器
+ * @return ESP_OK 成功, 其他 失败
  */
-void wifi_manager_init(void);
+esp_err_t wifi_manager_init(void);
 
 /**
  * @brief 连接 Wi-Fi 网络

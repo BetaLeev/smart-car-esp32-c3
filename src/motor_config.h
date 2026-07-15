@@ -23,23 +23,25 @@
 
 #ifdef USE_DRV8833
     // DRV8833 引脚配置
-    // 电机 A: GPIO 9, 10
+    // 注意：ESP32-C3-MINI-1 的 GPIO 6-11 连接到内部 SPI Flash，禁止使用！
+    // 电机 A: GPIO 4, 5
     // 电机 B: GPIO 2, 3
-    #define MOTOR_A_IN1_PIN    GPIO_NUM_9
-    #define MOTOR_A_IN2_PIN    GPIO_NUM_10
+    #define MOTOR_A_IN1_PIN    GPIO_NUM_4
+    #define MOTOR_A_IN2_PIN    GPIO_NUM_5
     #define MOTOR_B_IN1_PIN    GPIO_NUM_2
     #define MOTOR_B_IN2_PIN    GPIO_NUM_3
 #else
     // TB6612FNG 引脚配置
     #define MOTOR_STBY_PIN     GPIO_NUM_20
-    #define LEFT_MOTOR_IN1_PIN GPIO_NUM_9
-    #define LEFT_MOTOR_IN2_PIN GPIO_NUM_10
+    #define LEFT_MOTOR_IN1_PIN GPIO_NUM_4
+    #define LEFT_MOTOR_IN2_PIN GPIO_NUM_5
     #define RIGHT_MOTOR_IN1_PIN GPIO_NUM_2
     #define RIGHT_MOTOR_IN2_PIN GPIO_NUM_3
 #endif
 
 // LED 引脚配置
-#define LED_PIN             GPIO_NUM_8
+// 注意：GPIO 8 连接到 SPI Flash，改用 GPIO 1
+#define LED_PIN             GPIO_NUM_1
 
 // 测试引脚配置（预留扩展）
 #define TEST_PIN_0          GPIO_NUM_0
