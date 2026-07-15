@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "sdkconfig.h"
 #include "motor_driver.h"
+#include "wifi_manager.h"
+#include "web_server.h"
 
 static const char *TAG = "MAIN";
 
@@ -137,6 +139,13 @@ void app_main(void)
     // 初始化电机驱动
     motor_driver_init();
 
+    // 初始化 Wi-Fi 管理器
+    wifi_manager_init();
+
+    // 初始化 Web 服务器
+    web_server_init(80);
+    web_server_start();
+
     // 创建 LED 闪烁任务
     xTaskCreatePinnedToCore(
         led_blink_task,
@@ -169,4 +178,6 @@ void app_main(void)
         NULL,
         PRO_CPU_NUM
     );
+
+    ESP_LOGI(TAG, "All tasks created successfully");
 }

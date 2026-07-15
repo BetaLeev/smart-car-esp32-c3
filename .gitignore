@@ -20,6 +20,7 @@ sdkconfig.old
 
 # IDE
 .idea/
+!.trae/
 *.swp
 *.swo
 *~
