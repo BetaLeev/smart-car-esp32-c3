@@ -50,9 +50,9 @@ esp_err_t web_server_start(void);
 void web_server_stop(void);
 
 /**
- * @brief 获取当前小车状态
- * @return car_status_t* 状态指针
+ * @brief 获取当前小车状态（线程安全）
+ * @param out_status 输出参数，存储复制的小车状态
  */
-car_status_t* web_get_car_status(void);
+void web_get_car_status(car_status_t *out_status);
 
 #endif // WEB_SERVER_H

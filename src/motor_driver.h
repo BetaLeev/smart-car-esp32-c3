@@ -1,6 +1,6 @@
 /**
  * @file motor_driver.h
- * @brief DRV8833 电机驱动头文件
+ * @brief 电机驱动头文件
  */
 
 #ifndef MOTOR_DRIVER_H

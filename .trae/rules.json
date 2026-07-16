@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "name": "ESP32-C3 Smart Car Rules",
   "description": "智能小车项目开发规范 - 模块化、高可维护性",
   "rules": {
@@ -24,6 +24,62 @@
       "pattern": "^(feat|fix|docs|style|refactor|test|chore)(\\([a-z_-]+\\))?: .{1,50}",
       "description": "格式: type(module): description",
       "types": ["feat", "fix", "docs", "style", "refactor", "test", "chore"]
+    },
+    "esp32_compatibility": {
+      "description": "ESP32 芯片兼容性规则 - 避免使用仅在特定芯片上可用的 API",
+      "chip_specific_restrictions": {
+        "esp32_c3": {
+          "description": "ESP32-C3 是单核 RISC-V 芯片，无 PSRAM，无传统 Wi-Fi NVS 安全存储",
+          "prohibited_functions": {
+            "esp_get_heap_size": "使用 heap_caps_get_total_size(MALLOC_CAP_8BIT) 替代",
+            "esp_spiram_is_initialized": "ESP32-C3 无 PSRAM，删除相关代码",
+            "esp_chip_info": "需要 esp_chip_info.h，且功能有限"
+          },
+          "safe_alternatives": {
+            "total_heap": "heap_caps_get_total_size(MALLOC_CAP_8BIT)",
+            "heap_check": "heap_caps_check_integrity_all()"
+          }
+        },
+        "esp32_s2": {
+          "description": "ESP32-S2 支持 PSRAM",
+          "prohibited_functions": {}
+        },
+        "esp32_s3": {
+          "description": "ESP32-S3 支持 PSRAM 和 AI 加速器",
+          "prohibited_functions": {}
+        },
+        "esp32": {
+          "description": "原版 ESP32 双核芯片",
+          "prohibited_functions": {}
+        }
+      },
+      "checklist": {
+        "before_using_new_api": [
+          "查阅 ESP-IDF 编程指南确认函数可用性",
+          "检查 CONFIG_SOC_* 宏确认芯片支持",
+          "使用条件编译 #ifdef CONFIG_IDF_TARGET_ESP32C3 保护特定芯片代码",
+          "查看 esp-idf/components/esp_system/include/esp_chip_info.h",
+          "确认函数不在 prohibited_functions 列表中"
+        ],
+        "memory_apis": {
+          "safe": [
+            "esp_get_free_heap_size()",
+            "esp_get_minimum_free_heap_size()",
+            "heap_caps_get_free_size()",
+            "heap_caps_get_total_size()",
+            "heap_caps_check_integrity_all()"
+          ],
+          "unsafe_esp32c3": [
+            "esp_get_heap_size() - 使用 heap_caps_get_total_size() 替代",
+            "esp_spiram_* - ESP32-C3 无 PSRAM"
+          ]
+        }
+      },
+      "required_headers": {
+        "esp_get_free_heap_size": "esp_system.h",
+        "heap_caps_*": "esp_heap_caps.h",
+        "esp_chip_info": "esp_chip_info.h"
+      }
     },
     "code": {
       "structure": {
@@ -61,5 +117,22 @@
         "files": ["car_control.c", "car_control.h", "commands.h"]
       }
     }
-  }
+  },
+  "skills": [
+    {
+      "name": "esp32_review",
+      "file": ".trae/skills/esp32_review.md",
+      "description": "ESP32 内存安全与堆栈代码审查规范"
+    },
+    {
+      "name": "esp32_fix",
+      "file": ".trae/skills/esp32_fix.md",
+      "description": "ESP32 内存泄漏与资源释放修复规范"
+    },
+    {
+      "name": "esp32_code_review_rules",
+      "file": ".trae/rules/esp32_code_review_rules.md",
+      "description": "ESP32-C3 智能小车项目全方位代码审查规范（7大维度）"
+    }
+  ]
 }

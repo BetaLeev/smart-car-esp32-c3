@@ -49,6 +49,11 @@ esp_err_t wifi_connect(const char *ssid, const char *password);
 void wifi_disconnect(void);
 
 /**
+ * @brief 清理 Wi-Fi 资源
+ */
+void wifi_manager_cleanup(void);
+
+/**
  * @brief 获取当前 Wi-Fi 状态
  * @return wifi_state_t 当前状态
  */
