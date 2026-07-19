@@ -5,12 +5,9 @@
 #include "esp_log.h"
 #include "sdkconfig.h"
 #include "motor_driver.h"
-#include "wifi_manager.h"
-#include "web_server.h"
 #include "esp_err.h"
 #include "config/app_config.h"
 #include "config/pin_config.h"
-#include "config/wifi_config.h"
 
 static const char *TAG = "MAIN";
 
@@ -22,7 +19,7 @@ static void buzzer_init(void)
 #if CONFIG_BUZZER_ENABLED
     gpio_reset_pin(BUZZER_PIN);
     gpio_set_direction(BUZZER_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(BUZZER_PIN, 0);  // 初始关闭
+    gpio_set_level(BUZZER_PIN, 0);
     ESP_LOGI(TAG, "Buzzer initialized on GPIO %d", BUZZER_PIN);
 #endif
 }
@@ -44,11 +41,45 @@ void led_blink_task(void *pvParameters)
 }
 
 /**
+ * @brief 测试任务 - 自动运行测试程序
+ */
+void test_task(void *pvParameters)
+{
+    ESP_LOGI(TAG, "Test started!");
+
+    while (1) {
+        // 1. 前进
+        ESP_LOGI(TAG, ">>> Forward");
+        car_forward();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 2. 后退
+        ESP_LOGI(TAG, ">>> Backward");
+        car_backward();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 3. 左转
+        ESP_LOGI(TAG, ">>> Turn Left");
+        car_turn_left();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 4. 右转
+        ESP_LOGI(TAG, ">>> Turn Right");
+        car_turn_right();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 5. 停止
+        ESP_LOGI(TAG, ">>> Stop");
+        car_stop();
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+}
+
+/**
  * @brief 主函数
  */
 void app_main(void)
 {
-    // 等待串口稳定，确保烧录后串口工具能接收到日志
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     ESP_LOGI(TAG, "===========================================");
@@ -56,64 +87,16 @@ void app_main(void)
     ESP_LOGI(TAG, "Device: %s", DEVICE_NAME);
     ESP_LOGI(TAG, "===========================================");
 
-#if CONFIG_MOTOR_ENABLED
-    // 1. 初始化电机驱动
-    ESP_LOGI(TAG, "Step 1: Initializing motor driver...");
+    // 初始化电机驱动
+    ESP_LOGI(TAG, "Initializing motor driver...");
     motor_driver_init();
     ESP_LOGI(TAG, "Motor driver initialized");
-#endif
 
-#if CONFIG_BUZZER_ENABLED
-    // 1.5 初始化喇叭
-    ESP_LOGI(TAG, "Step 1.5: Initializing buzzer...");
+    // 初始化喇叭
     buzzer_init();
-    ESP_LOGI(TAG, "Buzzer initialized");
-#endif
 
-    // 2. 初始化 Wi-Fi 管理器
-    ESP_LOGI(TAG, "Step 2: Initializing Wi-Fi...");
-    esp_err_t ret = wifi_manager_init();
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Wi-Fi init failed: %s", esp_err_to_name(ret));
-    } else {
-        ESP_LOGI(TAG, "Wi-Fi manager initialized");
-
-        // 3. 启动 Wi-Fi (带重试机制)
-        ESP_LOGI(TAG, "Step 3: Starting Wi-Fi...");
-        int retry_count = 0;
-        const int max_retries = 3;
-        bool wifi_started = false;
-
-        while (retry_count < max_retries) {
-            ret = wifi_connect(CONFIG_AP_SSID, CONFIG_AP_PASSWORD);
-            if (ret == ESP_OK) {
-                ESP_LOGI(TAG, "Wi-Fi started successfully");
-                wifi_started = true;
-                break;
-            }
-            retry_count++;
-            if (retry_count < max_retries) {
-                ESP_LOGW(TAG, "Wi-Fi start failed (attempt %d/%d), retrying...", retry_count, max_retries);
-                vTaskDelay(pdMS_TO_TICKS(1000));
-            } else {
-                ESP_LOGE(TAG, "Wi-Fi start failed after %d attempts: %s", max_retries, esp_err_to_name(ret));
-            }
-        }
-
-        if (wifi_started) {
-#if CONFIG_WEB_SERVER_ENABLED
-            // 4. 初始化 Web 服务器
-            ESP_LOGI(TAG, "Step 4: Starting web server...");
-            web_server_init(CONFIG_WEB_SERVER_PORT);
-            web_server_start();
-            ESP_LOGI(TAG, "Web server started on port %d", CONFIG_WEB_SERVER_PORT);
-#endif
-        }
-    }
-
-#if CONFIG_LED_ENABLED
-    // 5. 创建 LED 闪烁任务
-    ESP_LOGI(TAG, "Step 5: Starting LED blink task...");
+    // 创建 LED 闪烁任务
+    ESP_LOGI(TAG, "Starting LED blink task...");
     xTaskCreatePinnedToCore(
         led_blink_task,
         "LED_Blink",
@@ -123,10 +106,20 @@ void app_main(void)
         NULL,
         PRO_CPU_NUM
     );
-#endif
+
+    // 创建测试任务
+    ESP_LOGI(TAG, "Starting test task...");
+    xTaskCreatePinnedToCore(
+        test_task,
+        "Test",
+        4096,
+        NULL,
+        2,
+        NULL,
+        PRO_CPU_NUM
+    );
 
     ESP_LOGI(TAG, "===========================================");
     ESP_LOGI(TAG, "System ready!");
-    ESP_LOGI(TAG, "Wi-Fi SSID: %s", CONFIG_AP_SSID);
     ESP_LOGI(TAG, "===========================================");
 }

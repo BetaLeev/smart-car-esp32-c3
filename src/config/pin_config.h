@@ -37,8 +37,8 @@
 // ============================================
 #ifdef MOTOR_DRIVER_TB6612FNG
     #define MOTOR_STBY_PIN       GPIO_NUM_20
-    #define LEFT_MOTOR_IN1_PIN   GPIO_NUM_4
-    #define LEFT_MOTOR_IN2_PIN   GPIO_NUM_5
+    #define LEFT_MOTOR_IN1_PIN   GPIO_NUM_8
+    #define LEFT_MOTOR_IN2_PIN   GPIO_NUM_9
     #define RIGHT_MOTOR_IN1_PIN  GPIO_NUM_2
     #define RIGHT_MOTOR_IN2_PIN  GPIO_NUM_3
 #endif

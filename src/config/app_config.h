@@ -36,6 +36,12 @@
 // 喇叭/有源蜂鸣器
 #define CONFIG_BUZZER_ENABLED         1
 
+// BLE 蓝牙
+#define CONFIG_BLE_ENABLED            0
+
+// Wi-Fi (可选)
+#define CONFIG_WIFI_ENABLED           1
+
 // ============================================
 // 任务配置
 // ============================================

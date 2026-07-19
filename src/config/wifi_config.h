@@ -31,7 +31,7 @@
 
 // AP 默认配置
 #define CONFIG_AP_SSID            "ESP32-CAR"
-#define CONFIG_AP_PASSWORD        ""           // 空字符串表示无密码 (开放网络)
+#define CONFIG_AP_PASSWORD        "123456"           // 密码
 #define CONFIG_AP_CHANNEL         1            // Wi-Fi 信道
 #define CONFIG_AP_MAX_CONNECTIONS 4            // 最大连接数
 
@@ -45,11 +45,11 @@
 // ============================================
 
 // STA 模式开关
-#define CONFIG_WIFI_STA_ENABLED   0
+#define CONFIG_WIFI_STA_ENABLED   1
 
 // STA 连接配置 (可通过网页动态修改)
-#define CONFIG_STA_DEFAULT_SSID   ""           // 默认连接的 Wi-Fi SSID
-#define CONFIG_STA_DEFAULT_PWD   ""            // 默认 Wi-Fi 密码
+#define CONFIG_STA_DEFAULT_SSID   "xiangjiazhgebu"           // 默认连接的 Wi-Fi SSID
+#define CONFIG_STA_DEFAULT_PWD    "bjbjbjbj"            // 默认 Wi-Fi 密码
 
 // STA 连接超时 (秒)
 #define CONFIG_STA_CONNECT_TIMEOUT_MS  15000
