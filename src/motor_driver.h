@@ -1,65 +1,107 @@
 /**
  * @file motor_driver.h
- * @brief 电机驱动头文件
+ * @brief 泵驱动头文件
  */
 
 #ifndef MOTOR_DRIVER_H
 #define MOTOR_DRIVER_H
 
+#include <stdbool.h>
 #include "motor_config.h"
 
 /**
- * @brief 初始化电机驱动
+ * @brief 初始化泵驱动
  */
 void motor_driver_init(void);
 
 /**
- * @brief 设置左电机状态
- * @param direction 电机方向 (MOTOR_STOP, MOTOR_FORWARD, MOTOR_BACKWARD)
+ * @brief 设置水泵档位
+ * @param level 0=关闭, 1=低速(30%), 2=中速(50%), 3=高速(80%)
  */
-void motor_left_set(motor_direction_t direction);
+void water_pump_set_level(int level);
 
 /**
- * @brief 设置右电机状态
- * @param direction 电机方向 (MOTOR_STOP, MOTOR_FORWARD, MOTOR_BACKWARD)
+ * @brief 获取水泵档位
  */
-void motor_right_set(motor_direction_t direction);
+int water_pump_get_level(void);
 
 /**
- * @brief 设置两个电机状态
- * @param left_dir 左电机方向
- * @param right_dir 右电机方向
+ * @brief 设置水泵状态
  */
-void motor_set_both(motor_direction_t left_dir, motor_direction_t right_dir);
+void water_pump_set_state(bool on);
 
 /**
- * @brief 停止所有电机
+ * @brief 获取水泵状态
  */
-void motor_stop_all(void);
+bool water_pump_is_on(void);
 
 /**
- * @brief 小车前进
+ * @brief 设置水泵定时模式
+ * @param enabled true=启用, false=禁用
  */
-void car_forward(void);
+void water_pump_set_timer(bool enabled);
 
 /**
- * @brief 小车后退
+ * @brief 获取水泵定时模式状态
  */
-void car_backward(void);
+bool water_pump_get_timer(void);
 
 /**
- * @brief 小车左转（原地左转）
+ * @brief 获取水泵定时运行状态
  */
-void car_turn_left(void);
+bool water_pump_is_timer_running(void);
 
 /**
- * @brief 小车右转（原地右转）
+ * @brief 设置氧气泵档位
+ * @param level 0=关闭, 1=低速(30%), 2=中速(50%), 3=高速(80%)
  */
-void car_turn_right(void);
+void oxygen_pump_set_level(int level);
 
 /**
- * @brief 小车停止
+ * @brief 获取氧气泵档位
  */
-void car_stop(void);
+int oxygen_pump_get_level(void);
+
+/**
+ * @brief 设置氧气泵状态
+ */
+void oxygen_pump_set_state(bool on);
+
+/**
+ * @brief 获取氧气泵状态
+ */
+bool oxygen_pump_is_on(void);
+
+/**
+ * @brief 设置氧气泵定时模式
+ * @param enabled true=启用, false=禁用
+ */
+void oxygen_pump_set_timer(bool enabled);
+
+/**
+ * @brief 获取氧气泵定时模式状态
+ */
+bool oxygen_pump_get_timer(void);
+
+/**
+ * @brief 获取氧气泵定时运行状态
+ */
+bool oxygen_pump_is_timer_running(void);
+
+/**
+ * @brief 设置所有泵的定时模式 (统一开关)
+ * @param enabled true=启用, false=禁用
+ */
+void all_pumps_set_timer(bool enabled);
+
+/**
+ * @brief 获取所有泵的定时模式状态
+ */
+bool all_pumps_get_timer(void);
+
+/**
+ * @brief 停止所有泵
+ */
+void pump_stop_all(void);
 
 #endif // MOTOR_DRIVER_H

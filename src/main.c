@@ -1,3 +1,13 @@
+/**
+ * @file main.c
+ * @brief ESP32-C3 双泵控制系统主程序
+ *
+ * 功能:
+ *   - GPIO 20 按键: 水泵 4档 (OFF -> LOW -> MED -> HIGH -> OFF...)
+ *   - GPIO 1 按键: 所有泵定时开关 (开启/关闭 40秒开/20秒停循环)
+ *   - 通电自动: AO 和 BO 都开始 40秒开/20秒停循环
+ */
+
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -5,24 +15,12 @@
 #include "esp_log.h"
 #include "sdkconfig.h"
 #include "motor_driver.h"
+#include "button.h"
 #include "esp_err.h"
 #include "config/app_config.h"
 #include "config/pin_config.h"
 
 static const char *TAG = "MAIN";
-
-/**
- * @brief 初始化喇叭 GPIO
- */
-static void buzzer_init(void)
-{
-#if CONFIG_BUZZER_ENABLED
-    gpio_reset_pin(BUZZER_PIN);
-    gpio_set_direction(BUZZER_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(BUZZER_PIN, 0);
-    ESP_LOGI(TAG, "Buzzer initialized on GPIO %d", BUZZER_PIN);
-#endif
-}
 
 /**
  * @brief LED 闪烁任务
@@ -41,41 +39,6 @@ void led_blink_task(void *pvParameters)
 }
 
 /**
- * @brief 测试任务 - 自动运行测试程序
- */
-void test_task(void *pvParameters)
-{
-    ESP_LOGI(TAG, "Test started!");
-
-    while (1) {
-        // 1. 前进
-        ESP_LOGI(TAG, ">>> Forward");
-        car_forward();
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        // 2. 后退
-        ESP_LOGI(TAG, ">>> Backward");
-        car_backward();
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        // 3. 左转
-        ESP_LOGI(TAG, ">>> Turn Left");
-        car_turn_left();
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        // 4. 右转
-        ESP_LOGI(TAG, ">>> Turn Right");
-        car_turn_right();
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        // 5. 停止
-        ESP_LOGI(TAG, ">>> Stop");
-        car_stop();
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-}
-
-/**
  * @brief 主函数
  */
 void app_main(void)
@@ -83,20 +46,18 @@ void app_main(void)
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     ESP_LOGI(TAG, "===========================================");
-    ESP_LOGI(TAG, "ESP32-C3-CAR Starting...");
-    ESP_LOGI(TAG, "Device: %s", DEVICE_NAME);
+    ESP_LOGI(TAG, "ESP32-C3 Dual Pump Control System");
     ESP_LOGI(TAG, "===========================================");
 
-    // 初始化电机驱动
-    ESP_LOGI(TAG, "Initializing motor driver...");
+    // 1. 初始化泵驱动
+    ESP_LOGI(TAG, "Initializing pump driver...");
     motor_driver_init();
-    ESP_LOGI(TAG, "Motor driver initialized");
 
-    // 初始化喇叭
-    buzzer_init();
+    // 2. 初始化按键
+    ESP_LOGI(TAG, "Initializing buttons...");
+    button_init();
 
-    // 创建 LED 闪烁任务
-    ESP_LOGI(TAG, "Starting LED blink task...");
+    // 3. 创建 LED 闪烁任务
     xTaskCreatePinnedToCore(
         led_blink_task,
         "LED_Blink",
@@ -107,19 +68,22 @@ void app_main(void)
         PRO_CPU_NUM
     );
 
-    // 创建测试任务
-    ESP_LOGI(TAG, "Starting test task...");
+    // 4. 创建按键任务
     xTaskCreatePinnedToCore(
-        test_task,
-        "Test",
-        4096,
+        button_task,
+        "Button",
+        BUTTON_TASK_STACK_SIZE,
         NULL,
-        2,
+        BUTTON_TASK_PRIORITY,
         NULL,
         PRO_CPU_NUM
     );
 
     ESP_LOGI(TAG, "===========================================");
     ESP_LOGI(TAG, "System ready!");
+    ESP_LOGI(TAG, "Controls:");
+    ESP_LOGI(TAG, "  GPIO 20: Water pump (OFF->LOW->MED->HIGH->OFF)");
+    ESP_LOGI(TAG, "  GPIO 1:  All pumps timer toggle (ON/OFF)");
+    ESP_LOGI(TAG, "  Auto:     AO & BO timer (40s ON / 20s OFF)");
     ESP_LOGI(TAG, "===========================================");
 }
