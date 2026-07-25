@@ -17,53 +17,153 @@
 static const char *TAG = "MOTOR_DRIVER";
 
 // ============================================
-// 电机控制函数
+// DRV8833 电机控制逻辑
 // ============================================
 
 /**
- * @brief 初始化电机驱动
+ * @brief 设置 DRV8833 电机 A 状态
+ * @param direction 电机方向
  */
-void motor_driver_init(void)
+static void drv8833_motor_a_set(motor_direction_t direction)
 {
-    ESP_LOGI(TAG, "===========================================");
-    ESP_LOGI(TAG, "Motor Driver Configuration:");
+    switch (direction) {
+        case MOTOR_FORWARD:
+            gpio_set_level(MOTOR_AIN1_PIN, 1);
+            gpio_set_level(MOTOR_AIN2_PIN, 0);
+            ESP_LOGD(TAG, "Motor A: FORWARD");
+            break;
+        case MOTOR_BACKWARD:
+            gpio_set_level(MOTOR_AIN1_PIN, 0);
+            gpio_set_level(MOTOR_AIN2_PIN, 1);
+            ESP_LOGD(TAG, "Motor A: BACKWARD");
+            break;
+        case MOTOR_STOP:
+        case MOTOR_BRAKE:
+        default:
+            gpio_set_level(MOTOR_AIN1_PIN, 0);
+            gpio_set_level(MOTOR_AIN2_PIN, 0);
+            ESP_LOGD(TAG, "Motor A: STOP");
+            break;
+    }
+}
 
-#ifdef MOTOR_DRIVER_DRV8833
-    ESP_LOGI(TAG, "Driver: DRV8833");
-    ESP_LOGI(TAG, "Motor A: %s, %s",
-             PIN_NAME(MOTOR_A_IN1_PIN),
-             PIN_NAME(MOTOR_A_IN2_PIN));
-    ESP_LOGI(TAG, "Motor B: %s, %s",
-             PIN_NAME(MOTOR_B_IN1_PIN),
-             PIN_NAME(MOTOR_B_IN2_PIN));
+/**
+ * @brief 设置 DRV8833 电机 B 状态
+ * @param direction 电机方向
+ */
+static void drv8833_motor_b_set(motor_direction_t direction)
+{
+    switch (direction) {
+        case MOTOR_FORWARD:
+            gpio_set_level(MOTOR_BIN1_PIN, 1);
+            gpio_set_level(MOTOR_BIN2_PIN, 0);
+            ESP_LOGD(TAG, "Motor B: FORWARD");
+            break;
+        case MOTOR_BACKWARD:
+            gpio_set_level(MOTOR_BIN1_PIN, 0);
+            gpio_set_level(MOTOR_BIN2_PIN, 1);
+            ESP_LOGD(TAG, "Motor B: BACKWARD");
+            break;
+        case MOTOR_STOP:
+        case MOTOR_BRAKE:
+        default:
+            gpio_set_level(MOTOR_BIN1_PIN, 0);
+            gpio_set_level(MOTOR_BIN2_PIN, 0);
+            ESP_LOGD(TAG, "Motor B: STOP");
+            break;
+    }
+}
 
-    // 初始化电机 A 引脚
-    gpio_reset_pin(MOTOR_A_IN1_PIN);
-    gpio_reset_pin(MOTOR_A_IN2_PIN);
-    gpio_set_direction(MOTOR_A_IN1_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(MOTOR_A_IN2_PIN, GPIO_MODE_OUTPUT);
+/**
+ * @brief 初始化 DRV8833 电机驱动
+ */
+static void drv8833_init(void)
+{
+    ESP_LOGI(TAG, "  Driver: DRV8833");
+    ESP_LOGI(TAG, "  Motor A: %s (AIN1), %s (AIN2)",
+             PIN_NAME(MOTOR_AIN1_PIN), PIN_NAME(MOTOR_AIN2_PIN));
+    ESP_LOGI(TAG, "  Motor B: %s (BIN1), %s (BIN2)",
+             PIN_NAME(MOTOR_BIN1_PIN), PIN_NAME(MOTOR_BIN2_PIN));
 
-    // 初始化电机 B 引脚
-    gpio_reset_pin(MOTOR_B_IN1_PIN);
-    gpio_reset_pin(MOTOR_B_IN2_PIN);
-    gpio_set_direction(MOTOR_B_IN1_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_direction(MOTOR_B_IN2_PIN, GPIO_MODE_OUTPUT);
+    // 电机 A - 先设置为输出并拉低，再 reset（避免浮空）
+    gpio_set_direction(MOTOR_AIN1_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MOTOR_AIN2_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(MOTOR_AIN1_PIN, 0);
+    gpio_set_level(MOTOR_AIN2_PIN, 0);
 
-    // 默认状态：都输出高电平（常亮）
-    gpio_set_level(MOTOR_A_IN1_PIN, 1);
-    gpio_set_level(MOTOR_A_IN2_PIN, 1);
-    gpio_set_level(MOTOR_B_IN1_PIN, 1);
-    gpio_set_level(MOTOR_B_IN2_PIN, 1);
+    // 电机 B
+    gpio_set_direction(MOTOR_BIN1_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MOTOR_BIN2_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(MOTOR_BIN1_PIN, 0);
+    gpio_set_level(MOTOR_BIN2_PIN, 0);
 
-#elif defined(MOTOR_DRIVER_TB6612FNG)
-    ESP_LOGI(TAG, "Driver: TB6612FNG");
-    ESP_LOGI(TAG, "STBY: %s", PIN_NAME(MOTOR_STBY_PIN));
-    ESP_LOGI(TAG, "Left Motor: %s, %s",
-             PIN_NAME(LEFT_MOTOR_IN1_PIN),
-             PIN_NAME(LEFT_MOTOR_IN2_PIN));
-    ESP_LOGI(TAG, "Right Motor: %s, %s",
-             PIN_NAME(RIGHT_MOTOR_IN1_PIN),
-             PIN_NAME(RIGHT_MOTOR_IN2_PIN));
+    ESP_LOGI(TAG, "  All motor pins set to LOW (stopped)");
+}
+
+// ============================================
+// TB6612FNG 电机控制逻辑
+// ============================================
+#ifdef MOTOR_DRIVER_TB6612FNG
+
+/**
+ * @brief 设置 TB6612FNG 左电机状态
+ * @param direction 电机方向
+ */
+static void tb6612fng_left_motor_set(motor_direction_t direction)
+{
+    switch (direction) {
+        case MOTOR_FORWARD:
+            gpio_set_level(LEFT_MOTOR_IN1_PIN, 1);
+            gpio_set_level(LEFT_MOTOR_IN2_PIN, 0);
+            break;
+        case MOTOR_BACKWARD:
+            gpio_set_level(LEFT_MOTOR_IN1_PIN, 0);
+            gpio_set_level(LEFT_MOTOR_IN2_PIN, 1);
+            break;
+        case MOTOR_STOP:
+        case MOTOR_BRAKE:
+        default:
+            gpio_set_level(LEFT_MOTOR_IN1_PIN, 0);
+            gpio_set_level(LEFT_MOTOR_IN2_PIN, 0);
+            break;
+    }
+}
+
+/**
+ * @brief 设置 TB6612FNG 右电机状态
+ * @param direction 电机方向
+ */
+static void tb6612fng_right_motor_set(motor_direction_t direction)
+{
+    switch (direction) {
+        case MOTOR_FORWARD:
+            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 1);
+            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 0);
+            break;
+        case MOTOR_BACKWARD:
+            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 0);
+            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 1);
+            break;
+        case MOTOR_STOP:
+        case MOTOR_BRAKE:
+        default:
+            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 0);
+            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 0);
+            break;
+    }
+}
+
+/**
+ * @brief 初始化 TB6612FNG 电机驱动
+ */
+static void tb6612fng_init(void)
+{
+    ESP_LOGI(TAG, "  Driver: TB6612FNG");
+    ESP_LOGI(TAG, "  STBY: %s", PIN_NAME(MOTOR_STBY_PIN));
+    ESP_LOGI(TAG, "  Left Motor: %s, %s",
+             PIN_NAME(LEFT_MOTOR_IN1_PIN), PIN_NAME(LEFT_MOTOR_IN2_PIN));
+    ESP_LOGI(TAG, "  Right Motor: %s, %s",
+             PIN_NAME(RIGHT_MOTOR_IN1_PIN), PIN_NAME(RIGHT_MOTOR_IN2_PIN));
 
     // 初始化 STBY 使能引脚
     gpio_reset_pin(MOTOR_STBY_PIN);
@@ -86,6 +186,26 @@ void motor_driver_init(void)
     gpio_set_level(LEFT_MOTOR_IN2_PIN, 0);
     gpio_set_level(RIGHT_MOTOR_IN1_PIN, 0);
     gpio_set_level(RIGHT_MOTOR_IN2_PIN, 0);
+}
+
+#endif  // MOTOR_DRIVER_TB6612FNG
+
+// ============================================
+// 公共 API 实现
+// ============================================
+
+/**
+ * @brief 初始化电机驱动
+ */
+void motor_driver_init(void)
+{
+    ESP_LOGI(TAG, "===========================================");
+    ESP_LOGI(TAG, "Motor Driver Initialization:");
+
+#ifdef MOTOR_DRIVER_DRV8833
+    drv8833_init();
+#elif defined(MOTOR_DRIVER_TB6612FNG)
+    tb6612fng_init();
 #else
     #error "No motor driver type defined! Set MOTOR_DRIVER_TYPE in pin_config.h"
 #endif
@@ -95,85 +215,14 @@ void motor_driver_init(void)
 }
 
 /**
- * @brief 设置电机 A 状态
- */
-void motor_a_set(motor_direction_t direction)
-{
-#ifdef MOTOR_DRIVER_DRV8833
-    switch (direction) {
-        case MOTOR_FORWARD:
-            gpio_set_level(MOTOR_A_IN1_PIN, 1);
-            gpio_set_level(MOTOR_A_IN2_PIN, 0);
-            ESP_LOGD(TAG, "Motor A: FORWARD");
-            break;
-        case MOTOR_BACKWARD:
-            gpio_set_level(MOTOR_A_IN1_PIN, 0);
-            gpio_set_level(MOTOR_A_IN2_PIN, 1);
-            ESP_LOGD(TAG, "Motor A: BACKWARD");
-            break;
-        case MOTOR_STOP:
-        case MOTOR_BRAKE:
-        default:
-            gpio_set_level(MOTOR_A_IN1_PIN, 0);
-            gpio_set_level(MOTOR_A_IN2_PIN, 0);
-            ESP_LOGD(TAG, "Motor A: STOP");
-            break;
-    }
-#endif
-}
-
-/**
- * @brief 设置电机 B 状态
- */
-void motor_b_set(motor_direction_t direction)
-{
-#ifdef MOTOR_DRIVER_DRV8833
-    switch (direction) {
-        case MOTOR_FORWARD:
-            gpio_set_level(MOTOR_B_IN1_PIN, 1);
-            gpio_set_level(MOTOR_B_IN2_PIN, 0);
-            ESP_LOGD(TAG, "Motor B: FORWARD");
-            break;
-        case MOTOR_BACKWARD:
-            gpio_set_level(MOTOR_B_IN1_PIN, 0);
-            gpio_set_level(MOTOR_B_IN2_PIN, 1);
-            ESP_LOGD(TAG, "Motor B: BACKWARD");
-            break;
-        case MOTOR_STOP:
-        case MOTOR_BRAKE:
-        default:
-            gpio_set_level(MOTOR_B_IN1_PIN, 0);
-            gpio_set_level(MOTOR_B_IN2_PIN, 0);
-            ESP_LOGD(TAG, "Motor B: STOP");
-            break;
-    }
-#endif
-}
-
-/**
  * @brief 设置左电机状态
  */
 void motor_left_set(motor_direction_t direction)
 {
 #ifdef MOTOR_DRIVER_DRV8833
-    motor_a_set(direction);
+    drv8833_motor_a_set(direction);
 #elif defined(MOTOR_DRIVER_TB6612FNG)
-    switch (direction) {
-        case MOTOR_FORWARD:
-            gpio_set_level(LEFT_MOTOR_IN1_PIN, 1);
-            gpio_set_level(LEFT_MOTOR_IN2_PIN, 0);
-            break;
-        case MOTOR_BACKWARD:
-            gpio_set_level(LEFT_MOTOR_IN1_PIN, 0);
-            gpio_set_level(LEFT_MOTOR_IN2_PIN, 1);
-            break;
-        case MOTOR_STOP:
-        case MOTOR_BRAKE:
-        default:
-            gpio_set_level(LEFT_MOTOR_IN1_PIN, 0);
-            gpio_set_level(LEFT_MOTOR_IN2_PIN, 0);
-            break;
-    }
+    tb6612fng_left_motor_set(direction);
 #endif
 }
 
@@ -183,24 +232,9 @@ void motor_left_set(motor_direction_t direction)
 void motor_right_set(motor_direction_t direction)
 {
 #ifdef MOTOR_DRIVER_DRV8833
-    motor_b_set(direction);
+    drv8833_motor_b_set(direction);
 #elif defined(MOTOR_DRIVER_TB6612FNG)
-    switch (direction) {
-        case MOTOR_FORWARD:
-            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 1);
-            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 0);
-            break;
-        case MOTOR_BACKWARD:
-            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 0);
-            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 1);
-            break;
-        case MOTOR_STOP:
-        case MOTOR_BRAKE:
-        default:
-            gpio_set_level(RIGHT_MOTOR_IN1_PIN, 0);
-            gpio_set_level(RIGHT_MOTOR_IN2_PIN, 0);
-            break;
-    }
+    tb6612fng_right_motor_set(direction);
 #endif
 }
 

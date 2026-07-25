@@ -138,13 +138,18 @@ static esp_err_t start_ap_mode(const char *ssid, const char *password)
     wifi_config.ap.max_connection = CONFIG_AP_MAX_CONNECTIONS;
     wifi_config.ap.channel = CONFIG_AP_CHANNEL;
 
-    if (password != NULL && strlen(password) >= 6) {
+    // 确保认证模式与密码匹配
+    wifi_auth_mode_t authmode;
+    if (password != NULL && strlen(password) >= 8) {
         strncpy((char *)wifi_config.ap.password, password, sizeof(wifi_config.ap.password) - 1);
         wifi_config.ap.password[sizeof(wifi_config.ap.password) - 1] = '\0';
-        wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
+        authmode = WIFI_AUTH_WPA2_PSK;
+        ESP_LOGI(TAG, "Auth mode: WPA2_PSK, password length: %d", (int)strlen(password));
     } else {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+        authmode = WIFI_AUTH_OPEN;
+        ESP_LOGI(TAG, "Auth mode: OPEN");
     }
+    wifi_config.ap.authmode = authmode;
 
     ret = esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
     if (ret != ESP_OK) {
@@ -352,7 +357,13 @@ esp_err_t wifi_connect(const char *ssid, const char *password)
         return ret;
     }
 
-    // 4. 配置并连接 STA
+    // 4. 设置发射功率（在Wi-Fi启动后设置更稳定）
+    // ESP-IDF power unit = 0.25 dBm, range [8, 84] = 2~20 dBm
+    // 设置为10 dBm = 10 / 0.25 = 40
+    esp_wifi_set_max_tx_power(40);
+    ESP_LOGI(TAG, "Wi-Fi tx power set to 10 dBm");
+
+    // 5. 配置并连接 STA
 #if CONFIG_WIFI_STA_ENABLED
     if (mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) {
         const char *sta_ssid = CONFIG_STA_DEFAULT_SSID;

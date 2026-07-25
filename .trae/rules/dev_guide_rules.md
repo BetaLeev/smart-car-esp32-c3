@@ -105,15 +105,44 @@ xTaskCreate(task_func, "task_name", 8192, NULL, 5, &task_handle);
 
 ## 三、代码规范规则
 
-### 3.1 编译警告处理
+### 3.1 编译错误处理
 
-| 警告类型 | 处理方式 |
-|----------|----------|
-| `-Wunused-function` | 添加 `__attribute__((unused))` 或删除函数 |
-| `-Wformat-truncation` | **必须**扩大缓冲区，不能强制忽略 |
-| `-Wimplicit-function-declaration` | 添加缺失的头文件 |
+| 错误类型 | 原因 | 解决方案 |
+|----------|------|----------|
+| `undeclared (first use in this function)` | 使用了未包含的头文件中的宏/函数 | 添加对应的 `#include` |
+| `implicit declaration of function` | 缺少函数声明 | 添加缺失的头文件 |
+| `-Wformat-truncation` | 缓冲区太小 | **必须**扩大缓冲区 |
 
-### 3.2 禁止的写法
+### 3.2 头文件包含规则
+
+使用其他模块定义的宏、函数、结构体时，**必须包含对应的头文件**：
+
+| 使用的定义 | 需要包含的头文件 |
+|------------|------------------|
+| `CONFIG_*` 宏 | 对应的 `config/*.h` |
+| `wifi_*` 函数 | `wifi/wifi_manager.h` |
+| `motor_*` 函数 | `motor_driver.h` |
+| `gpio_*` 函数 | ESP-IDF `driver/gpio.h` |
+| `ESP_LOGI`/`ESP_LOGE` | ESP-IDF `esp_log.h` |
+| `vTaskDelay`/`pdMS_TO_TICKS` | ESP-IDF `freertos/FreeRTOS.h` |
+
+```c
+// 错误示例：使用了 CONFIG_AP_SSID 但未包含头文件
+#include "config/app_config.h"  // 只有 app_config.h，没有 wifi_config.h
+
+ret = wifi_connect(CONFIG_AP_SSID, CONFIG_AP_PASSWORD);  // 编译错误！
+
+// 正确示例：包含所有需要的头文件
+#include "config/app_config.h"
+#include "config/wifi_config.h"  // 包含 CONFIG_AP_SSID 定义
+#include "wifi/wifi_manager.h"   // 包含 wifi_connect 函数声明
+
+ret = wifi_connect(CONFIG_AP_SSID, CONFIG_AP_PASSWORD);  // ✅ 编译通过
+```
+
+**检查清单**：新增代码时，确认所有使用的宏/函数都有对应的 `#include`。
+
+### 3.3 禁止的写法
 
 ```c
 // 禁止：在 ISR 或事件回调中使用 portMAX_DELAY
