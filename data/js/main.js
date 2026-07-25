@@ -32,13 +32,6 @@ function bindEvents() {
         await CarState.setGear(value);
     });
 
-    // 速度滑块
-    UI.elements.speedSlider?.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value);
-        UI.updateSpeedDisplay(value);
-        CarState.setSpeed(value);
-    });
-
     // 方向按钮 - 按下
     UI.elements.btnLeft?.addEventListener('mousedown', async (e) => {
         e.preventDefault();
@@ -119,7 +112,7 @@ function bindEvents() {
 
     // 阻止默认触摸行为（防止移动端长按弹出菜单）
     document.addEventListener('touchmove', (e) => {
-        if (e.target.closest('.gear-slider, .speed-slider, .direction-btn, .fan-slider')) {
+        if (e.target.closest('.gear-slider, .direction-btn, .fan-slider')) {
             e.preventDefault();
         }
     }, { passive: false });

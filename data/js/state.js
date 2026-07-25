@@ -6,7 +6,6 @@
 const CarState = {
     // 当前状态
     gear: 'N',           // N, D, R
-    speed: 50,
     direction: null,     // null, 'left', 'right'
     isMoving: false,
 
@@ -99,7 +98,7 @@ const CarState = {
      * 按喇叭
      */
     async honk() {
-        await API.sendCommand('horn', 0);
+        await API.sendCommand('horn');
     },
 
     // ========== 风扇控制 - 暂时禁用 ==========

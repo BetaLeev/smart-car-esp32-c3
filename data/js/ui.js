@@ -21,11 +21,6 @@ const UI = {
         this.elements.gearText = document.getElementById('gear-text');
         this.elements.gearSlider = document.getElementById('gear-slider');
 
-        // 速度显示
-        this.elements.speedBar = document.getElementById('speed-bar');
-        this.elements.speedValue = document.getElementById('speed-value');
-        this.elements.speedSlider = document.getElementById('speed-slider');
-
         // 控制按钮
         this.elements.btnLeft = document.getElementById('btn-left');
         this.elements.btnRight = document.getElementById('btn-right');
@@ -75,19 +70,6 @@ const UI = {
     updateGearSlider(value) {
         if (this.elements.gearSlider) {
             this.elements.gearSlider.value = value;
-        }
-    },
-
-    /**
-     * 更新速度显示
-     * @param {number} value - 速度值 0-100
-     */
-    updateSpeedDisplay(value) {
-        if (this.elements.speedBar) {
-            this.elements.speedBar.style.width = value + '%';
-        }
-        if (this.elements.speedValue) {
-            this.elements.speedValue.textContent = value;
         }
     },
 

@@ -7,10 +7,9 @@ const API = {
     /**
      * 发送控制命令
      * @param {string} command - 命令类型: forward, backward, left, right, stop, horn
-     * @param {number} speed - 速度值 0-100
      * @returns {Promise<object>}
      */
-    async sendCommand(command, speed = 50) {
+    async sendCommand(command) {
         try {
             const response = await fetch('/api/control', {
                 method: 'POST',
@@ -18,8 +17,7 @@ const API = {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    command: command,
-                    speed: speed
+                    command: command
                 })
             });
             return await response.json();
