@@ -16,20 +16,24 @@
 // ============================================
 /**
  * 电机驱动类型:
- *   - MOTOR_DRIVER_DRV8833   : 双 H 桥电机驱动模块
+ *   - MOTOR_DRIVER_DRV8833   : 双 H 桥电机驱动模块 (无 STBY 引脚)
  *   - MOTOR_DRIVER_TB6612FNG : 双 H 桥电机驱动模块 (带 STBY 引脚)
  */
-// #define MOTOR_DRIVER_DRV8833
-#define MOTOR_DRIVER_TB6612FNG
+#define MOTOR_DRIVER_DRV8833
+// #define MOTOR_DRIVER_TB6612FNG
 
 // ============================================
 // DRV8833 引脚配置
 // ============================================
 #ifdef MOTOR_DRIVER_DRV8833
-    #define MOTOR_A_IN1_PIN      GPIO_NUM_4
-    #define MOTOR_A_IN2_PIN      GPIO_NUM_5
-    #define MOTOR_B_IN1_PIN      GPIO_NUM_2
-    #define MOTOR_B_IN2_PIN      GPIO_NUM_3
+    /**
+     * 电机 A: AIN1/AIN2
+     * 电机 B: BIN1/BIN2
+     */
+    #define MOTOR_AIN1_PIN      GPIO_NUM_20  // 电机 A 正转
+    #define MOTOR_AIN2_PIN      GPIO_NUM_10  // 电机 A 反转
+    #define MOTOR_BIN1_PIN      GPIO_NUM_1   // 电机 B 正转
+    #define MOTOR_BIN2_PIN      GPIO_NUM_2   // 电机 B 反转
 #endif
 
 // ============================================
@@ -44,15 +48,19 @@
 #endif
 
 // ============================================
-// LED 引脚配置
+// 蜂鸣器引脚配置
 // ============================================
-// 注意: GPIO 8 连接到 SPI Flash，改用 GPIO 1
-#define LED_PIN              GPIO_NUM_1
+#define BUZZER_PIN           GPIO_NUM_0   // 蜂鸣器引脚 (低电平触发)
 
 // ============================================
-// 喇叭/有源蜂鸣器引脚配置
+// LED 引脚配置
 // ============================================
-#define BUZZER_PIN           GPIO_NUM_21
+#define LED_PIN              GPIO_NUM_4   // LED 指示灯
+
+// ============================================
+// 风扇引脚配置
+// ============================================
+#define FAN_GPIO_PIN         GPIO_NUM_21  // 风扇 PWM 控制引脚 (改到GPIO21)
 
 // ============================================
 // 预留测试引脚
@@ -61,7 +69,7 @@
 #define TEST_PIN_1           GPIO_NUM_7
 #define TEST_PIN_2           GPIO_NUM_10
 #define TEST_PIN_3           GPIO_NUM_11
-#define TEST_PIN_4           GPIO_NUM_21
+// TEST_PIN_4 已用于风扇 GPIO_NUM_21
 
 // ============================================
 // ADC 引脚 (预留)
@@ -87,7 +95,7 @@ static inline const char* pin_to_name(gpio_num_t pin) {
         case GPIO_NUM_10: return "GPIO_10";
         case GPIO_NUM_11: return "GPIO_11";
         case GPIO_NUM_20: return "GPIO_20";
-        case GPIO_NUM_21: return "GPIO_21";
+        case GPIO_NUM_21: return "GPIO_21";  // 风扇引脚
         default: return "UNKNOWN";
     }
 }

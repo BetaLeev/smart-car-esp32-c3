@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ESP32-CAR 控制面板</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 状态栏 -->
+        <header class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Wi-Fi</span>
+                <span class="status-value" id="wifi-status">连接中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">IP</span>
+                <span class="status-value" id="ip-address">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">信号</span>
+                <span class="status-value" id="rssi">-</span>
+            </div>
+        </header>
+
+        <!-- 主控制区 -->
+        <main class="control-area">
+            <!-- 当前档位显示 -->
+            <div class="gear-display">
+                <div class="gear-indicator" id="current-gear">N</div>
+                <div class="gear-text" id="gear-text">空挡</div>
+            </div>
+
+            <!-- 档位滑块 -->
+            <div class="gear-slider-container">
+                <div class="gear-labels">
+                    <span class="gear-label reverse">R</span>
+                    <span class="gear-label neutral">N</span>
+                    <span class="gear-label drive">D</span>
+                </div>
+                <input type="range" 
+                       id="gear-slider" 
+                       class="gear-slider" 
+                       min="-1" 
+                       max="1" 
+                       value="0" 
+                       step="1">
+            </div>
+
+            <!-- 速度条 -->
+            <div class="speed-display">
+                <div class="speed-bar-container">
+                    <div class="speed-bar" id="speed-bar"></div>
+                </div>
+                <div class="speed-value">
+                    <span id="speed-value">0</span>
+                    <span class="speed-unit">m/s</span>
+                </div>
+            </div>
+
+            <!-- 速度滑块 -->
+            <div class="speed-slider-container">
+                <div class="slider-label">占空比</div>
+                <input type="range" 
+                       id="speed-slider" 
+                       class="speed-slider" 
+                       min="0" 
+                       max="100" 
+                       value="50">
+            </div>
+
+            <!-- 方向控制 -->
+            <div class="direction-controls">
+                <button class="direction-btn left" id="btn-left">◀</button>
+                <button class="direction-btn stop" id="btn-stop">■</button>
+                <button class="direction-btn right" id="btn-right">▶</button>
+            </div>
+
+            <!-- 功能按钮 -->
+            <div class="action-buttons">
+                <button class="action-btn horn" id="btn-horn">
+                    <span class="horn-icon">📢</span>
+                    喇叭
+                </button>
+            </div>
+
+            <!-- 风扇控制 - 暂时隐藏（GPIO驱动能力不足） -->
+            <!--
+            <div class="fan-control">
+                <div class="fan-header">
+                    <span class="fan-icon">🌀</span>
+                    <span class="fan-title">小风扇</span>
+                    <label class="switch">
+                        <input type="checkbox" id="fan-switch">
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="fan-slider-container">
+                    <input type="range" 
+                           id="fan-slider" 
+                           class="fan-slider" 
+                           min="0" 
+                           max="100" 
+                           value="50">
+                    <div class="fan-value">
+                        <span id="fan-value">50</span>
+                    </div>
+                </div>
+            </div>
+            -->
+        </main>
+
+        <!-- 内存监控 -->
+        <footer class="memory-info">
+            <span>堆内存: <span id="free-heap">-</span> KB</span>
+            <span>运行时间: <span id="uptime">-</span></span>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
